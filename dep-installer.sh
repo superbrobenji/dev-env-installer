@@ -212,8 +212,7 @@ install_fira_code() {
     $PKG_INSTALL fonts-firacode
     success "Fira Code font installed on Linux."
   elif [[ "$OS" == "macos" ]]; then
-    brew tap homebrew/cask-fonts
-    $PKG_INSTALL --cask font-fira-code
+    $PKG_INSTALL font-fira-code
     success "Fira Code font installed on macOS via Homebrew."
 
     # Install Nerd Fonts Symbols Only for icon support
