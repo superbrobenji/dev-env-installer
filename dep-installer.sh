@@ -243,11 +243,31 @@ process_dependencies() {
 }
 
 # ----------------------------------------
+# Sudo Handler
+# ----------------------------------------
+
+check_sudo_access() {
+  if ! sudo -v; then
+    error "Sudo privileges are required for installing packages."
+    error "Please run this script in a terminal where you can enter your password."
+    exit 1
+  fi
+
+  # Keep sudo alive until script finishes
+  while true; do
+    sudo -n true
+    sleep 60
+    kill -0 "$$" || exit
+  done 2>/dev/null &
+}
+
+# ----------------------------------------
 # Main Entry
 # ----------------------------------------
 
 main() {
   detect_operating_system
+  check_sudo_access
   process_dependencies
 }
 
