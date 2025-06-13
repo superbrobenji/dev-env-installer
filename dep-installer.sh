@@ -17,6 +17,7 @@ DEPENDENCIES=(
   tmux
   fzf
   ohmyzsh
+  fira_code
 )
 
 # Will be set during OS detection
@@ -86,6 +87,10 @@ is_dependency_installed() {
 
     fzf)
       command -v fzf &>/dev/null || [[ -d "$HOME/.fzf" ]]
+      ;;
+
+    fira_code)
+      fc-list | grep -i "Fira.*Code" &>/dev/null
       ;;
 
     *)
@@ -198,6 +203,36 @@ install_ohmyzsh() {
   log "Installing oh-my-zsh..."
   RUNZSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
   success "oh-my-zsh installed."
+}
+
+install_fira_code() {
+  log "Installing Fira Code font..."
+
+  if [[ "$OS" == "linux" ]]; then
+    $PKG_INSTALL fonts-firacode
+    success "Fira Code font installed on Linux."
+  elif [[ "$OS" == "macos" ]]; then
+    brew tap homebrew/cask-fonts
+    $PKG_INSTALL --cask font-fira-code
+    success "Fira Code font installed on macOS via Homebrew."
+
+    # Install Nerd Fonts Symbols Only for icon support
+    local nerd_fonts_zip="$HOME/Downloads/NerdFontsSymbolsOnly.zip"
+    local nerd_fonts_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/NerdFontsSymbolsOnly.zip"
+    local fonts_dir="$HOME/Library/Fonts"
+
+    if [[ ! -d "$fonts_dir" ]]; then
+      mkdir -p "$fonts_dir"
+    fi
+
+    curl -L "$nerd_fonts_url" -o "$nerd_fonts_zip"
+    unzip -o "$nerd_fonts_zip" -d "$fonts_dir"
+    rm -f "$nerd_fonts_zip"
+    success "Nerd Fonts Symbols Only installed for icon support on macOS."
+  else
+    error "Unsupported OS for Fira Code installation."
+    return 1
+  fi
 }
 
 # ----------------------------------------
