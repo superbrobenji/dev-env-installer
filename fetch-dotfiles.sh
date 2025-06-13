@@ -36,7 +36,7 @@ clone_or_update_nvim_config() {
   else
     echo "🔄 Neovim config repo exists. Pulling latest changes..."
     git -C "$NVIM_CONFIG_DIR" fetch --all
-    git -C "$NVIM_CONFIG_DIR" reset --hard origin/master
+    git -C "$NVIM_CONFIG_DIR" reset --hard origin/main
   fi
   echo "✅ Neovim config is up to date."
 }
