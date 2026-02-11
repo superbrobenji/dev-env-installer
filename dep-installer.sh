@@ -162,13 +162,17 @@ install_nvm() {
   log "Installing nvm..."
   curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
   export NVM_DIR="$HOME/.nvm"
-  [[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
+  if [ -s "$NVM_DIR/nvm.sh" ]; then
+    # shellcheck source=/dev/null
+    source "$NVM_DIR/nvm.sh"
+  fi
   success "nvm installed."
 }
 
 install_node() {
   log "Installing Node.js..."
   export NVM_DIR="$HOME/.nvm"
+  # shellcheck source=/dev/null
   [[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
   nvm install --lts
   success "Node.js installed."
