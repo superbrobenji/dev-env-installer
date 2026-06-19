@@ -94,7 +94,33 @@ fix_ssh_permissions() {
   return 0
 }
 
-ensure_local_override_stubs() {
+setup_gitconfig_overrides() {
+  local personal_email="" work_email="" content
+
+  if [[ ! -f "$HOME/.gitconfig-personal" ]]; then
+    if [[ "${YES:-0}" != "1" ]]; then
+      printf "Personal email for git commits: "
+      read -r personal_email
+    fi
+    content="$(cat "$DOTFILES_DIR/.gitconfig-personal.template")"
+    [[ -n "$personal_email" ]] && content="${content//\[PERSONAL EMAIL\]/$personal_email}"
+    printf '%s\n' "$content" > "$HOME/.gitconfig-personal"
+    log "Written ~/.gitconfig-personal"
+  fi
+
+  if [[ ! -f "$HOME/.gitconfig-work" ]]; then
+    if [[ "${YES:-0}" != "1" ]]; then
+      printf "Work email for git commits: "
+      read -r work_email
+    fi
+    content="$(cat "$DOTFILES_DIR/.gitconfig-work.template")"
+    [[ -n "$work_email" ]] && content="${content//\[WORK EMAIL\]/$work_email}"
+    printf '%s\n' "$content" > "$HOME/.gitconfig-work"
+    log "Written ~/.gitconfig-work"
+  fi
+}
+
+ensure_zshrc_local_stub() {
   if [[ ! -f "$HOME/.zshrc.local" ]]; then
     cat > "$HOME/.zshrc.local" <<'EOF'
 # Machine-specific zsh overrides. Not tracked in dotfiles repo.
@@ -104,29 +130,14 @@ ensure_local_override_stubs() {
 # command -v typo >/dev/null 2>&1 && eval "$(typo init zsh)"
 EOF
   fi
-  if [[ ! -f "$HOME/.gitconfig.work" ]]; then
-    cat > "$HOME/.gitconfig.work" <<'EOF'
-# Work git identity. Included from .gitconfig when gitdir matches ~/work/.
-# [user]
-#   name = Your Work Name
-#   email = work@example.com
-EOF
-  fi
-  if [[ ! -f "$HOME/.gitconfig.personal" ]]; then
-    cat > "$HOME/.gitconfig.personal" <<'EOF'
-# Personal git identity. Included from .gitconfig when gitdir matches ~/projects/.
-# [user]
-#   name = Your Name
-#   email = you@example.com
-EOF
-  fi
 }
 
 run_dotfiles() {
   verify_dotfiles_ownership
   clone_or_update_repo "$DOTFILES_REPO" "$DOTFILES_DIR"
   checkout_dotfiles
-  ensure_local_override_stubs
+  setup_gitconfig_overrides
+  ensure_zshrc_local_stub
   clone_or_update_repo "$NVIM_REPO" "$NVIM_DIR"
   success "dotfiles + nvim config in place"
 }

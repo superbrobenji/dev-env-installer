@@ -24,24 +24,6 @@ setup() {
   rm -rf "$tmp"
 }
 
-@test "ensure_local_override_stubs creates files if missing" {
-  HOME="$(mktemp -d)"
-  ensure_local_override_stubs
-  [ -f "$HOME/.zshrc.local" ]
-  [ -f "$HOME/.gitconfig.work" ]
-  [ -f "$HOME/.gitconfig.personal" ]
-  rm -rf "$HOME"
-}
-
-@test "ensure_local_override_stubs does not overwrite existing files" {
-  HOME="$(mktemp -d)"
-  echo "existing" > "$HOME/.zshrc.local"
-  ensure_local_override_stubs
-  run cat "$HOME/.zshrc.local"
-  assert_output "existing"
-  rm -rf "$HOME"
-}
-
 @test "_is_local_override returns 0 for .gitconfig-work" {
   run _is_local_override ".gitconfig-work"
   assert_success
@@ -110,5 +92,73 @@ setup() {
   mkdir -p "$HOME/.ssh"
   run fix_ssh_permissions
   assert_success
+  rm -rf "$HOME"
+}
+
+@test "setup_gitconfig_overrides writes both config files from templates" {
+  HOME="$(mktemp -d)"
+  DOTFILES_DIR="$(mktemp -d)"
+  printf '[user]\n\temail = [PERSONAL EMAIL]\n' > "$DOTFILES_DIR/.gitconfig-personal.template"
+  printf '[user]\n\temail = [WORK EMAIL]\n' > "$DOTFILES_DIR/.gitconfig-work.template"
+  YES=1 setup_gitconfig_overrides
+  [ -f "$HOME/.gitconfig-personal" ]
+  [ -f "$HOME/.gitconfig-work" ]
+  rm -rf "$HOME" "$DOTFILES_DIR"
+}
+
+@test "setup_gitconfig_overrides leaves placeholders when YES=1" {
+  HOME="$(mktemp -d)"
+  DOTFILES_DIR="$(mktemp -d)"
+  printf '[user]\n\temail = [PERSONAL EMAIL]\n' > "$DOTFILES_DIR/.gitconfig-personal.template"
+  printf '[user]\n\temail = [WORK EMAIL]\n' > "$DOTFILES_DIR/.gitconfig-work.template"
+  YES=1 setup_gitconfig_overrides
+  run grep '\[PERSONAL EMAIL\]' "$HOME/.gitconfig-personal"
+  assert_success
+  run grep '\[WORK EMAIL\]' "$HOME/.gitconfig-work"
+  assert_success
+  rm -rf "$HOME" "$DOTFILES_DIR"
+}
+
+@test "setup_gitconfig_overrides substitutes emails interactively" {
+  HOME="$(mktemp -d)"
+  DOTFILES_DIR="$(mktemp -d)"
+  printf '[user]\n\temail = [PERSONAL EMAIL]\n' > "$DOTFILES_DIR/.gitconfig-personal.template"
+  printf '[user]\n\temail = [WORK EMAIL]\n' > "$DOTFILES_DIR/.gitconfig-work.template"
+  printf 'personal@example.com\nwork@corp.com\n' | setup_gitconfig_overrides
+  run grep 'personal@example.com' "$HOME/.gitconfig-personal"
+  assert_success
+  run grep 'work@corp.com' "$HOME/.gitconfig-work"
+  assert_success
+  rm -rf "$HOME" "$DOTFILES_DIR"
+}
+
+@test "setup_gitconfig_overrides is idempotent when files exist" {
+  HOME="$(mktemp -d)"
+  DOTFILES_DIR="$(mktemp -d)"
+  printf '[user]\n\temail = [PERSONAL EMAIL]\n' > "$DOTFILES_DIR/.gitconfig-personal.template"
+  printf '[user]\n\temail = [WORK EMAIL]\n' > "$DOTFILES_DIR/.gitconfig-work.template"
+  echo "existing personal" > "$HOME/.gitconfig-personal"
+  echo "existing work" > "$HOME/.gitconfig-work"
+  YES=1 setup_gitconfig_overrides
+  run cat "$HOME/.gitconfig-personal"
+  assert_output "existing personal"
+  run cat "$HOME/.gitconfig-work"
+  assert_output "existing work"
+  rm -rf "$HOME" "$DOTFILES_DIR"
+}
+
+@test "ensure_zshrc_local_stub creates .zshrc.local if missing" {
+  HOME="$(mktemp -d)"
+  ensure_zshrc_local_stub
+  [ -f "$HOME/.zshrc.local" ]
+  rm -rf "$HOME"
+}
+
+@test "ensure_zshrc_local_stub does not overwrite existing .zshrc.local" {
+  HOME="$(mktemp -d)"
+  echo "existing" > "$HOME/.zshrc.local"
+  ensure_zshrc_local_stub
+  run cat "$HOME/.zshrc.local"
+  assert_output "existing"
   rm -rf "$HOME"
 }
