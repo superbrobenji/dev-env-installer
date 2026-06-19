@@ -84,6 +84,16 @@ _is_local_override() {
   esac
 }
 
+setup_ssh_dir() {
+  mkdir -p "$HOME/.ssh"
+  chmod 700 "$HOME/.ssh"
+}
+
+fix_ssh_permissions() {
+  [[ -f "$HOME/.ssh/config" ]] && chmod 600 "$HOME/.ssh/config"
+  return 0
+}
+
 ensure_local_override_stubs() {
   if [[ ! -f "$HOME/.zshrc.local" ]]; then
     cat > "$HOME/.zshrc.local" <<'EOF'

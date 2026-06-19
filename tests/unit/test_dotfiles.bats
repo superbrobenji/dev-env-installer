@@ -71,3 +71,44 @@ setup() {
   run _is_local_override ".zshrc"
   assert_failure
 }
+
+@test "setup_ssh_dir creates ~/.ssh with perms 700" {
+  HOME="$(mktemp -d)"
+  setup_ssh_dir
+  [ -d "$HOME/.ssh" ]
+  local perms
+  perms="$(stat -f "%Lp" "$HOME/.ssh" 2>/dev/null || stat -c "%a" "$HOME/.ssh")"
+  [ "$perms" = "700" ]
+  rm -rf "$HOME"
+}
+
+@test "setup_ssh_dir is idempotent when dir exists" {
+  HOME="$(mktemp -d)"
+  mkdir -p "$HOME/.ssh"
+  chmod 755 "$HOME/.ssh"
+  setup_ssh_dir
+  local perms
+  perms="$(stat -f "%Lp" "$HOME/.ssh" 2>/dev/null || stat -c "%a" "$HOME/.ssh")"
+  [ "$perms" = "700" ]
+  rm -rf "$HOME"
+}
+
+@test "fix_ssh_permissions sets 600 on ~/.ssh/config if present" {
+  HOME="$(mktemp -d)"
+  mkdir -p "$HOME/.ssh"
+  touch "$HOME/.ssh/config"
+  chmod 644 "$HOME/.ssh/config"
+  fix_ssh_permissions
+  local perms
+  perms="$(stat -f "%Lp" "$HOME/.ssh/config" 2>/dev/null || stat -c "%a" "$HOME/.ssh/config")"
+  [ "$perms" = "600" ]
+  rm -rf "$HOME"
+}
+
+@test "fix_ssh_permissions is no-op when config absent" {
+  HOME="$(mktemp -d)"
+  mkdir -p "$HOME/.ssh"
+  run fix_ssh_permissions
+  assert_success
+  rm -rf "$HOME"
+}
