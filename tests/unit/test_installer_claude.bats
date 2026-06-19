@@ -68,7 +68,8 @@ setup() {
 
 @test "_claude_merge_settings is idempotent" {
   HOME="$(mktemp -d)"
-  _claude_merge_settings
+  run _claude_merge_settings
+  assert_success
   local first_content
   first_content="$(cat "$HOME/.claude/settings.json")"
   run _claude_merge_settings
@@ -93,7 +94,7 @@ SCRIPT
 
 @test "_claude_add_marketplaces adds both when neither present" {
   FAKE_BIN="$(mktemp -d)"
-  _make_fake_claude_marketplace "claude-plugins-official"
+  _make_fake_claude_marketplace "❯ claude-plugins-official"
   PATH="$FAKE_BIN:$PATH"
   run _claude_add_marketplaces
   assert_success
@@ -106,8 +107,8 @@ SCRIPT
 
 @test "_claude_add_marketplaces skips when both already present" {
   FAKE_BIN="$(mktemp -d)"
-  _make_fake_claude_marketplace "superpowers-marketplace
-caveman"
+  _make_fake_claude_marketplace "❯ superpowers-marketplace
+❯ caveman"
   PATH="$FAKE_BIN:$PATH"
   run _claude_add_marketplaces
   assert_success
@@ -117,7 +118,7 @@ caveman"
 
 @test "_claude_add_marketplaces adds only missing marketplace" {
   FAKE_BIN="$(mktemp -d)"
-  _make_fake_claude_marketplace "superpowers-marketplace"
+  _make_fake_claude_marketplace "❯ superpowers-marketplace"
   PATH="$FAKE_BIN:$PATH"
   run _claude_add_marketplaces
   assert_success
@@ -192,4 +193,9 @@ SCRIPT
   run grep "superpowers@claude-plugins-official" "$FAKE_BIN/plugin_install_calls.log"
   assert_success
   rm -rf "$FAKE_BIN"
+}
+
+@test "claude_install warns and returns 1 when npm not on PATH" {
+  PATH=/tmp/empty_nonexistent run claude_install
+  assert_failure
 }

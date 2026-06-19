@@ -55,12 +55,12 @@ _claude_add_marketplaces() {
   local known
   known="$(claude plugin marketplace list 2>/dev/null || true)"
 
-  if ! printf '%s' "$known" | grep -qF "superpowers-marketplace"; then
+  if ! printf '%s' "$known" | grep -qF "❯ superpowers-marketplace"; then
     claude plugin marketplace add obra/superpowers-marketplace \
       || warn "Failed to add superpowers-marketplace"
   fi
 
-  if ! printf '%s' "$known" | grep -qF "caveman"; then
+  if ! printf '%s' "$known" | grep -qF "❯ caveman"; then
     claude plugin marketplace add JuliusBrussee/caveman \
       || warn "Failed to add caveman marketplace"
   fi
@@ -89,6 +89,8 @@ _claude_install_plugins() {
 }
 
 claude_install() {
+  ensure_nvm_loaded 2>/dev/null || true
+  command -v npm >/dev/null 2>&1 || { warn "npm not found; skipping claude install"; return 1; }
   log "Installing Claude Code CLI"
   npm install -g @anthropic-ai/claude-code
 
