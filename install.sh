@@ -25,6 +25,7 @@ SKIP_DOTFILES=false
 ONLY=""
 SKIP=""
 VERBOSE=false
+YES=0
 
 usage() {
   cat <<'EOF'
@@ -58,13 +59,13 @@ parse_args() {
         [[ $# -ge 2 ]] || { error "--skip requires a value"; exit 1; }
         SKIP="$2"; shift ;;
       --verbose)        VERBOSE=true ;;
-      --yes)            ;;
+      --yes)            YES=1 ;;
       -h|--help)        usage; exit 0 ;;
       *)                error "Unknown arg: $1"; usage; exit 1 ;;
     esac
     shift
   done
-  export DRY_RUN NO_SUDO SKIP_FONTS SKIP_CHSH SKIP_DOTFILES ONLY SKIP VERBOSE
+  export DRY_RUN NO_SUDO SKIP_FONTS SKIP_CHSH SKIP_DOTFILES ONLY SKIP VERBOSE YES
 }
 
 TOOL_ORDER=(
