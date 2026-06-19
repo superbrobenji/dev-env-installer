@@ -68,6 +68,7 @@ checkout_dotfiles() {
   done
   # Mirror tracked files from the repo into $HOME.
   for file in "${tracked[@]+"${tracked[@]}"}"; do
+    if _is_local_override "$file"; then continue; fi
     mkdir -p "$HOME/$(dirname "$file")"
     cp -a "$DOTFILES_DIR/$file" "$HOME/$file"
   done
