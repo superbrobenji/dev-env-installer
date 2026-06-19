@@ -128,6 +128,7 @@ tests/
 │   ├── test_installer_go.bats
 │   ├── test_installer_kitty.bats
 │   ├── test_installer_neovim.bats
+│   ├── test_installer_claude.bats
 │   ├── test_installer_node.bats
 │   ├── test_installer_nvm.bats
 │   ├── test_installer_ohmyzsh.bats
@@ -135,6 +136,7 @@ tests/
 │   ├── test_installer_ripgrep.bats
 │   ├── test_installer_rust.bats
 │   ├── test_installer_tmux.bats
+│   ├── test_installer_tree_sitter_cli.bats
 │   ├── test_installer_zsh.bats
 │   ├── test_names.bats               # logical-name → package-name map
 │   ├── test_network.bats             # connectivity probe

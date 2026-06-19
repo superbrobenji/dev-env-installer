@@ -143,6 +143,8 @@ Tools are installed in the order shown. The first three (`basics`, `git`, `build
 | `ripgrep` | rg (ripgrep) | System or `~/.local/bin/rg` | Falls back to GitHub release tarball |
 | `nvm` | Node Version Manager | `~/.nvm` | |
 | `node` | Node.js LTS | via nvm | Installed via `nvm install --lts` |
+| `claude` | Claude Code CLI | via npm | Installs CLI, adds plugin marketplaces, installs plugins, merges `~/.claude/settings.json` |
+| `tree_sitter_cli` | tree-sitter CLI | via npm | |
 | `go` | Go toolchain (latest) | `~/.local/go` | User-local; no sudo required |
 | `rust` | Rust + cargo via rustup | `~/.cargo` | `rustup` installer; user-local |
 | `kitty` | kitty terminal emulator | System / app bundle / `~/.local/kitty.app` | |
@@ -151,11 +153,10 @@ Tools are installed in the order shown. The first three (`basics`, `git`, `build
 | `fonts` | FiraCode + NerdFont symbols | `~/.local/share/fonts` or `~/Library/Fonts` | Homebrew cask on macOS |
 
 After tool installation, the installer:
-- Syncs your dotfiles repo to `~/.dotfiles` and mirrors tracked files to `$HOME`
+- Syncs your dotfiles repo to `~/.dotfiles` and mirrors tracked files to `$HOME` (including `~/.claude/skills/`)
 - Clones your nvim config to `~/.config/nvim`
-- Creates stub files (`~/.zshrc.local`, `~/.gitconfig.work`, `~/.gitconfig.personal`) if absent
+- Creates stub files (`~/.zshrc.local`, `~/.gitconfig-work`, `~/.gitconfig-personal`) if absent
 - Changes the default shell to zsh (unless `--skip-chsh`)
-- Runs `npm install` in `~/.config/nvim` for tree-sitter-cli if node is available
 
 ---
 
