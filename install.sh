@@ -226,9 +226,13 @@ main() {
     run_tool "$tool"
   done
   if [[ "$SKIP_DOTFILES" != "true" ]]; then
-    # shellcheck source=dotfiles.sh
-    source "$SCRIPT_DIR/dotfiles.sh"
-    run_dotfiles
+    if is_dry_run; then
+      info "[dry-run] would clone+checkout dotfiles + nvim config"
+    else
+      # shellcheck source=dotfiles.sh
+      source "$SCRIPT_DIR/dotfiles.sh"
+      run_dotfiles
+    fi
   fi
   post_install
   print_summary
