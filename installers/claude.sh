@@ -66,6 +66,28 @@ _claude_add_marketplaces() {
   fi
 }
 
+_claude_install_plugins() {
+  local installed
+  installed="$(claude plugin list 2>/dev/null || true)"
+
+  local plugins=(
+    "typescript-lsp@claude-plugins-official"
+    "superpowers@claude-plugins-official"
+    "superpowers@superpowers-marketplace"
+    "caveman@caveman"
+    "lua-lsp@claude-plugins-official"
+    "pyright-lsp@claude-plugins-official"
+  )
+
+  local plugin
+  for plugin in "${plugins[@]}"; do
+    if ! printf '%s' "$installed" | grep -qF "$plugin"; then
+      claude plugin install "$plugin" \
+        || warn "Failed to install plugin $plugin"
+    fi
+  done
+}
+
 claude_install() {
   log "Installing Claude Code CLI"
   npm install -g @anthropic-ai/claude-code

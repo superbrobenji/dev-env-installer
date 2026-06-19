@@ -127,3 +127,69 @@ caveman"
   assert_failure
   rm -rf "$FAKE_BIN"
 }
+
+_make_fake_claude_plugins() {
+  local list_output="$1"
+  local call_log="$FAKE_BIN/plugin_install_calls.log"
+  cat > "$FAKE_BIN/claude" << SCRIPT
+#!/usr/bin/env bash
+case "\$*" in
+  "plugin list") printf '%s\n' '$list_output' ;;
+  plugin\ install\ *) echo "\$*" >> '$call_log' ;;
+  *) true ;;
+esac
+SCRIPT
+  chmod +x "$FAKE_BIN/claude"
+}
+
+@test "_claude_install_plugins installs all when none present" {
+  FAKE_BIN="$(mktemp -d)"
+  _make_fake_claude_plugins ""
+  PATH="$FAKE_BIN:$PATH"
+  run _claude_install_plugins
+  assert_success
+  run grep "typescript-lsp@claude-plugins-official" "$FAKE_BIN/plugin_install_calls.log"
+  assert_success
+  run grep "superpowers@claude-plugins-official" "$FAKE_BIN/plugin_install_calls.log"
+  assert_success
+  run grep "superpowers@superpowers-marketplace" "$FAKE_BIN/plugin_install_calls.log"
+  assert_success
+  run grep "caveman@caveman" "$FAKE_BIN/plugin_install_calls.log"
+  assert_success
+  run grep "lua-lsp@claude-plugins-official" "$FAKE_BIN/plugin_install_calls.log"
+  assert_success
+  run grep "pyright-lsp@claude-plugins-official" "$FAKE_BIN/plugin_install_calls.log"
+  assert_success
+  rm -rf "$FAKE_BIN"
+}
+
+@test "_claude_install_plugins skips already-installed plugins" {
+  FAKE_BIN="$(mktemp -d)"
+  _make_fake_claude_plugins "  ❯ typescript-lsp@claude-plugins-official
+  ❯ superpowers@claude-plugins-official
+  ❯ superpowers@superpowers-marketplace
+  ❯ caveman@caveman
+  ❯ lua-lsp@claude-plugins-official
+  ❯ pyright-lsp@claude-plugins-official"
+  PATH="$FAKE_BIN:$PATH"
+  run _claude_install_plugins
+  assert_success
+  [ ! -f "$FAKE_BIN/plugin_install_calls.log" ]
+  rm -rf "$FAKE_BIN"
+}
+
+@test "_claude_install_plugins installs only missing plugins" {
+  FAKE_BIN="$(mktemp -d)"
+  _make_fake_claude_plugins "  ❯ typescript-lsp@claude-plugins-official
+  ❯ caveman@caveman"
+  PATH="$FAKE_BIN:$PATH"
+  run _claude_install_plugins
+  assert_success
+  run grep "typescript-lsp@claude-plugins-official" "$FAKE_BIN/plugin_install_calls.log"
+  assert_failure
+  run grep "caveman@caveman" "$FAKE_BIN/plugin_install_calls.log"
+  assert_failure
+  run grep "superpowers@claude-plugins-official" "$FAKE_BIN/plugin_install_calls.log"
+  assert_success
+  rm -rf "$FAKE_BIN"
+}
