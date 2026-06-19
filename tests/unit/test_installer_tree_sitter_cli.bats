@@ -4,7 +4,6 @@ load helpers
 
 setup() {
   load_lib core.sh
-  load_installer node.sh
   load_installer tree_sitter_cli.sh
 }
 
