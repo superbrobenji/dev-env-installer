@@ -52,7 +52,7 @@ checkout_dotfiles() {
   backup_dir="$HOME/.dotfiles-backup-$(date +%s)"
   tracked=()
   while IFS= read -r _df_line; do tracked+=("$_df_line"); done < <(git -C "$DOTFILES_DIR" ls-tree -r HEAD --name-only)
-  for file in "${tracked[@]}"; do
+  for file in "${tracked[@]+"${tracked[@]}"}"; do
     if [[ -e "$HOME/$file" ]] && ! _is_local_override "$file"; then
       if ! cmp -s "$HOME/$file" "$DOTFILES_DIR/$file" 2>/dev/null; then
         mkdir -p "$(dirname "$backup_dir/$file")"
@@ -61,7 +61,7 @@ checkout_dotfiles() {
     fi
   done
   # Mirror tracked files from the repo into $HOME.
-  for file in "${tracked[@]}"; do
+  for file in "${tracked[@]+"${tracked[@]}"}"; do
     mkdir -p "$HOME/$(dirname "$file")"
     cp -a "$DOTFILES_DIR/$file" "$HOME/$file"
   done
