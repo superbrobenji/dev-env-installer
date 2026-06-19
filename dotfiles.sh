@@ -135,9 +135,12 @@ EOF
 run_dotfiles() {
   verify_dotfiles_ownership
   clone_or_update_repo "$DOTFILES_REPO" "$DOTFILES_DIR"
+  setup_ssh_dir
   checkout_dotfiles
+  fix_ssh_permissions
   setup_gitconfig_overrides
   ensure_zshrc_local_stub
+  mkdir -p "$HOME/projects/work" "$HOME/projects/personal"
   clone_or_update_repo "$NVIM_REPO" "$NVIM_DIR"
   success "dotfiles + nvim config in place"
 }
