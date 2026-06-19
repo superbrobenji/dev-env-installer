@@ -50,7 +50,8 @@ clone_or_update_repo() {
 checkout_dotfiles() {
   local tracked file backup_dir
   backup_dir="$HOME/.dotfiles-backup-$(date +%s)"
-  mapfile -t tracked < <(git -C "$DOTFILES_DIR" ls-tree -r HEAD --name-only)
+  tracked=()
+  while IFS= read -r _df_line; do tracked+=("$_df_line"); done < <(git -C "$DOTFILES_DIR" ls-tree -r HEAD --name-only)
   for file in "${tracked[@]}"; do
     if [[ -e "$HOME/$file" ]] && ! _is_local_override "$file"; then
       if ! cmp -s "$HOME/$file" "$DOTFILES_DIR/$file" 2>/dev/null; then
