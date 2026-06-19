@@ -54,8 +54,12 @@ parse_args() {
       --skip-fonts)     SKIP_FONTS=true ;;
       --skip-chsh)      SKIP_CHSH=true ;;
       --skip-dotfiles)  SKIP_DOTFILES=true ;;
-      --only)           ONLY="$2"; shift ;;
-      --skip)           SKIP="$2"; shift ;;
+      --only)
+        [[ $# -ge 2 ]] || { error "--only requires a value"; exit 1; }
+        ONLY="$2"; shift ;;
+      --skip)
+        [[ $# -ge 2 ]] || { error "--skip requires a value"; exit 1; }
+        SKIP="$2"; shift ;;
       --verbose)        VERBOSE=true ;;
       --update)         UPDATE=true ;;
       --yes)            ASSUME_YES=true ;;
