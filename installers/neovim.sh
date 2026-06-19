@@ -2,7 +2,7 @@
 # Installer: Neovim. Prefer GitHub release tarball; build from source as fallback.
 
 neovim_check() {
-  command -v nvim >/dev/null 2>&1
+  command -v nvim >/dev/null 2>&1 || [[ -x "$HOME/.local/bin/nvim" ]]
 }
 
 neovim_install() {

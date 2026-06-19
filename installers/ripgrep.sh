@@ -2,7 +2,7 @@
 # Installer: ripgrep. Prefer pkg manager, fall back to GitHub release tarball.
 
 ripgrep_check() {
-  command -v rg >/dev/null 2>&1
+  command -v rg >/dev/null 2>&1 || [[ -x "$HOME/.local/bin/rg" ]]
 }
 
 ripgrep_install() {
