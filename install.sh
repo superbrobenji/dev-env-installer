@@ -80,6 +80,7 @@ TOOL_ORDER=(
   ripgrep
   nvm
   node
+  tree_sitter_cli
   go
   rust
   kitty
@@ -183,10 +184,6 @@ run_chsh() {
 
 post_install() {
   run_chsh
-  if [[ -d "$HOME/.config/nvim" ]] && command -v npm >/dev/null 2>&1; then
-    log "Running npm install in nvim config (tree-sitter-cli)"
-    (cd "$HOME/.config/nvim" && npm install --silent) || warn "npm install in nvim dir failed"
-  fi
 }
 
 print_summary() {
