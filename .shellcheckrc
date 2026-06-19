@@ -1,0 +1,2 @@
+# Allow sourcing files dynamically; we vouch for them in code review.
+external-sources=true

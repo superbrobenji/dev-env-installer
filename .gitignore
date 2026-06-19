@@ -1,0 +1,3 @@
+tests/lib/
+*.log
+.dev-env-installer.log
