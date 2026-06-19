@@ -78,7 +78,8 @@ checkout_dotfiles() {
 
 _is_local_override() {
   case "$1" in
-    .zshrc.local|.gitconfig.work|.gitconfig.personal) return 0 ;;
+    .zshrc.local|.gitconfig-work|.gitconfig-personal) return 0 ;;
+    .ssh/id_*|.ssh/known_hosts) return 0 ;;
     *) return 1 ;;
   esac
 }

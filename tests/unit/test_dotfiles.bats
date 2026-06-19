@@ -41,3 +41,33 @@ setup() {
   assert_output "existing"
   rm -rf "$HOME"
 }
+
+@test "_is_local_override returns 0 for .gitconfig-work" {
+  run _is_local_override ".gitconfig-work"
+  assert_success
+}
+
+@test "_is_local_override returns 0 for .gitconfig-personal" {
+  run _is_local_override ".gitconfig-personal"
+  assert_success
+}
+
+@test "_is_local_override returns 0 for .ssh/id_rsa" {
+  run _is_local_override ".ssh/id_rsa"
+  assert_success
+}
+
+@test "_is_local_override returns 0 for .ssh/id_ed25519" {
+  run _is_local_override ".ssh/id_ed25519"
+  assert_success
+}
+
+@test "_is_local_override returns 0 for .ssh/known_hosts" {
+  run _is_local_override ".ssh/known_hosts"
+  assert_success
+}
+
+@test "_is_local_override returns 1 for .zshrc" {
+  run _is_local_override ".zshrc"
+  assert_failure
+}
