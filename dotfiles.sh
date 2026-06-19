@@ -48,10 +48,16 @@ clone_or_update_repo() {
 # Bare-repo checkout helper: works with $DOTFILES_DIR as the git dir and $HOME as worktree.
 # For now we keep the conventional clone-into-$HOME approach but back up conflicts first.
 checkout_dotfiles() {
-  local tracked file backup_dir
+  local tracked file backup_dir _git_files
   backup_dir="$HOME/.dotfiles-backup-$(date +%s)"
   tracked=()
-  while IFS= read -r _df_line; do tracked+=("$_df_line"); done < <(git -C "$DOTFILES_DIR" ls-tree -r HEAD --name-only)
+  _git_files="$(git -C "$DOTFILES_DIR" ls-tree -r HEAD --name-only 2>/dev/null)" \
+    || { error "Failed to list files in $DOTFILES_DIR (is HEAD valid?)"; return 1; }
+  if [[ -z "$_git_files" ]]; then
+    warn "No files tracked in $DOTFILES_DIR — wrong branch or empty repo?"
+    return 0
+  fi
+  while IFS= read -r _df_line; do [[ -n "$_df_line" ]] && tracked+=("$_df_line"); done <<< "$_git_files"
   for file in "${tracked[@]+"${tracked[@]}"}"; do
     if [[ -e "$HOME/$file" ]] && ! _is_local_override "$file"; then
       if ! cmp -s "$HOME/$file" "$DOTFILES_DIR/$file" 2>/dev/null; then

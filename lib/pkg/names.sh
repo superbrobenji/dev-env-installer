@@ -31,6 +31,9 @@ name_for() {
     pngpaste)
       if [[ "$DISTRO_FAMILY" == "macos" ]]; then
         echo "pngpaste"
+      else
+        error "name_for: pngpaste is macOS-only"
+        return 1
       fi ;;
     basics)
       case "$DISTRO_FAMILY" in

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-DISTROS=(ubuntu-24.04 debian-12 fedora-40 arch)
+DISTROS=(ubuntu-22.04 ubuntu-24.04 debian-12 fedora-40 arch)
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 results=()

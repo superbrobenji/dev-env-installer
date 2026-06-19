@@ -25,8 +25,6 @@ SKIP_DOTFILES=false
 ONLY=""
 SKIP=""
 VERBOSE=false
-UPDATE=false
-ASSUME_YES=false
 
 usage() {
   cat <<'EOF'
@@ -39,9 +37,8 @@ Usage: install.sh [FLAGS]
       --skip-dotfiles   Install deps only; don't touch dotfiles
       --only TOOL[,...] Install only listed tools
       --skip TOOL[,...] Skip listed tools
-      --verbose         Tee full log to stdout
-      --update          Force re-pull of dotfiles + nvim config
-      --yes             Assume yes to all prompts (unattended)
+      --verbose         Tee all log output to stdout (default: high-level only)
+      --yes             Accept all defaults; no interactive prompts
   -h, --help            Show help
 EOF
 }
@@ -61,14 +58,13 @@ parse_args() {
         [[ $# -ge 2 ]] || { error "--skip requires a value"; exit 1; }
         SKIP="$2"; shift ;;
       --verbose)        VERBOSE=true ;;
-      --update)         UPDATE=true ;;
-      --yes)            ASSUME_YES=true ;;
+      --yes)            ;;
       -h|--help)        usage; exit 0 ;;
       *)                error "Unknown arg: $1"; usage; exit 1 ;;
     esac
     shift
   done
-  export DRY_RUN NO_SUDO SKIP_FONTS SKIP_CHSH SKIP_DOTFILES ONLY SKIP VERBOSE UPDATE ASSUME_YES
+  export DRY_RUN NO_SUDO SKIP_FONTS SKIP_CHSH SKIP_DOTFILES ONLY SKIP VERBOSE
 }
 
 TOOL_ORDER=(
@@ -211,7 +207,7 @@ print_summary() {
 
 main() {
   parse_args "$@"
-  : > "$CORE_LOG_FILE"
+  : > "$CORE_LOG_FILE" 2>/dev/null || true
   info "🔧 Dev Env Installer starting"
   info "📝 Log: $CORE_LOG_FILE"
   detect_platform

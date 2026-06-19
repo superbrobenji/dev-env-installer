@@ -49,7 +49,13 @@ detect_platform() {
     Darwin) OS=macos ; DISTRO=macos ; DISTRO_FAMILY=macos ;;
     Linux)
       OS=linux
-      eval "$(parse_os_release /etc/os-release)"
+      local _key _val
+      while IFS='=' read -r _key _val; do
+        case "$_key" in
+          DISTRO)        DISTRO="$_val" ;;
+          DISTRO_FAMILY) DISTRO_FAMILY="$_val" ;;
+        esac
+      done < <(parse_os_release /etc/os-release)
       ;;
     *) error "unsupported OS: $(uname -s)"; return 1 ;;
   esac

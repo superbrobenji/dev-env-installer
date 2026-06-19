@@ -33,7 +33,18 @@ _core_emit() {
   fi
 }
 
-log()     { _core_emit "🔹" "$*"; }
+_core_emit_log() {
+  local prefix="$1"; shift
+  local msg="$*"
+  _core_init_log
+  if [[ "${VERBOSE:-false}" == "true" ]]; then
+    _core_emit "$prefix" "$msg"
+  elif [[ "$_CORE_LOG_READY" == "1" ]]; then
+    printf '%s %s\n' "$prefix" "$msg" >> "$CORE_LOG_FILE"
+  fi
+}
+
+log()     { _core_emit_log "🔹" "$*"; }
 info()    { _core_emit "ℹ️ " "$*"; }
 success() { _core_emit "✅" "$*"; }
 warn()    { _core_emit "⚠️ " "$*"; }
