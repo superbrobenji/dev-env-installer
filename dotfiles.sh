@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# Dotfiles + nvim config sync. Source from install.sh.
+
+DOTFILES_REPO="${DOTFILES_REPO:-https://github.com/superbrobenji/dotfiles.git}"
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+NVIM_REPO="${NVIM_REPO:-https://github.com/superbrobenji/nvim.git}"
+NVIM_DIR="${NVIM_DIR:-$HOME/.config/nvim}"
+
+default_branch() {
+  local dir="$1"
+  git -C "$dir" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null \
+    | sed 's|^origin/||'
+}
+
+# Refuse to operate if the existing .dotfiles dir isn't owned by $USER.
+verify_dotfiles_ownership() {
+  [[ -e "$DOTFILES_DIR" ]] || return 0
+  local owner
+  owner="$(stat -f '%Su' "$DOTFILES_DIR" 2>/dev/null || stat -c '%U' "$DOTFILES_DIR")"
+  if [[ "$owner" != "$USER" ]]; then
+    warn "$DOTFILES_DIR is owned by $owner, not $USER"
+    if needs_sudo; then
+      info "Fixing ownership"
+      sudo_run chown -R "$USER:$(id -gn)" "$DOTFILES_DIR"
+    else
+      error "Run with sudo to fix, or remove $DOTFILES_DIR manually"
+      return 1
+    fi
+  fi
+}
+
+clone_or_update_repo() {
+  local repo="$1" dir="$2"
+  if [[ ! -d "$dir/.git" ]]; then
+    log "Cloning $repo → $dir"
+    rm -rf "$dir"
+    git clone --depth=1 "$repo" "$dir"
+  else
+    log "Updating $dir"
+    git -C "$dir" fetch --all --quiet
+    local branch
+    branch="$(default_branch "$dir")"
+    [[ -n "$branch" ]] || branch="main"
+    git -C "$dir" reset --hard "origin/$branch"
+  fi
+}
+
+# Bare-repo checkout helper: works with $DOTFILES_DIR as the git dir and $HOME as worktree.
+# For now we keep the conventional clone-into-$HOME approach but back up conflicts first.
+checkout_dotfiles() {
+  local tracked file backup_dir
+  backup_dir="$HOME/.dotfiles-backup-$(date +%s)"
+  mapfile -t tracked < <(git -C "$DOTFILES_DIR" ls-tree -r HEAD --name-only)
+  for file in "${tracked[@]}"; do
+    if [[ -e "$HOME/$file" ]] && ! _is_local_override "$file"; then
+      if ! cmp -s "$HOME/$file" "$DOTFILES_DIR/$file" 2>/dev/null; then
+        mkdir -p "$(dirname "$backup_dir/$file")"
+        mv "$HOME/$file" "$backup_dir/$file"
+      fi
+    fi
+  done
+  # Mirror tracked files from the repo into $HOME.
+  for file in "${tracked[@]}"; do
+    mkdir -p "$HOME/$(dirname "$file")"
+    cp -a "$DOTFILES_DIR/$file" "$HOME/$file"
+  done
+  if [[ -d "$backup_dir" ]]; then
+    warn "Backed up conflicting files to $backup_dir"
+  fi
+}
+
+_is_local_override() {
+  case "$1" in
+    .zshrc.local|.gitconfig.work|.gitconfig.personal) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+ensure_local_override_stubs() {
+  if [[ ! -f "$HOME/.zshrc.local" ]]; then
+    cat > "$HOME/.zshrc.local" <<'EOF'
+# Machine-specific zsh overrides. Not tracked in dotfiles repo.
+# Example exports:
+# export AWS_PROFILE=...
+# export AVANTE_ANTHROPIC_API_KEY=...
+# command -v typo >/dev/null 2>&1 && eval "$(typo init zsh)"
+EOF
+  fi
+  if [[ ! -f "$HOME/.gitconfig.work" ]]; then
+    cat > "$HOME/.gitconfig.work" <<'EOF'
+# Work git identity. Included from .gitconfig when gitdir matches ~/work/.
+# [user]
+#   name = Your Work Name
+#   email = work@example.com
+EOF
+  fi
+  if [[ ! -f "$HOME/.gitconfig.personal" ]]; then
+    cat > "$HOME/.gitconfig.personal" <<'EOF'
+# Personal git identity. Included from .gitconfig when gitdir matches ~/projects/.
+# [user]
+#   name = Your Name
+#   email = you@example.com
+EOF
+  fi
+}
+
+run_dotfiles() {
+  verify_dotfiles_ownership
+  clone_or_update_repo "$DOTFILES_REPO" "$DOTFILES_DIR"
+  checkout_dotfiles
+  ensure_local_override_stubs
+  clone_or_update_repo "$NVIM_REPO" "$NVIM_DIR"
+  success "dotfiles + nvim config in place"
+}
