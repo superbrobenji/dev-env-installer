@@ -51,6 +51,21 @@ with open(settings_path, 'w') as f:
 PYEOF
 }
 
+_claude_add_marketplaces() {
+  local known
+  known="$(claude plugin marketplace list 2>/dev/null || true)"
+
+  if ! printf '%s' "$known" | grep -qF "superpowers-marketplace"; then
+    claude plugin marketplace add obra/superpowers-marketplace \
+      || warn "Failed to add superpowers-marketplace"
+  fi
+
+  if ! printf '%s' "$known" | grep -qF "caveman"; then
+    claude plugin marketplace add JuliusBrussee/caveman \
+      || warn "Failed to add caveman marketplace"
+  fi
+}
+
 claude_install() {
   log "Installing Claude Code CLI"
   npm install -g @anthropic-ai/claude-code

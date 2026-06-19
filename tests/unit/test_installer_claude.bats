@@ -76,3 +76,54 @@ setup() {
   [ "$(cat "$HOME/.claude/settings.json")" = "$first_content" ]
   rm -rf "$HOME"
 }
+
+_make_fake_claude_marketplace() {
+  local list_output="$1"
+  local call_log="$FAKE_BIN/marketplace_calls.log"
+  cat > "$FAKE_BIN/claude" << SCRIPT
+#!/usr/bin/env bash
+case "\$*" in
+  "plugin marketplace list") printf '%s\n' '$list_output' ;;
+  plugin\ marketplace\ add\ *) echo "\$*" >> '$call_log' ;;
+  *) true ;;
+esac
+SCRIPT
+  chmod +x "$FAKE_BIN/claude"
+}
+
+@test "_claude_add_marketplaces adds both when neither present" {
+  FAKE_BIN="$(mktemp -d)"
+  _make_fake_claude_marketplace "claude-plugins-official"
+  PATH="$FAKE_BIN:$PATH"
+  run _claude_add_marketplaces
+  assert_success
+  run grep "superpowers-marketplace" "$FAKE_BIN/marketplace_calls.log"
+  assert_success
+  run grep "caveman" "$FAKE_BIN/marketplace_calls.log"
+  assert_success
+  rm -rf "$FAKE_BIN"
+}
+
+@test "_claude_add_marketplaces skips when both already present" {
+  FAKE_BIN="$(mktemp -d)"
+  _make_fake_claude_marketplace "superpowers-marketplace
+caveman"
+  PATH="$FAKE_BIN:$PATH"
+  run _claude_add_marketplaces
+  assert_success
+  [ ! -f "$FAKE_BIN/marketplace_calls.log" ]
+  rm -rf "$FAKE_BIN"
+}
+
+@test "_claude_add_marketplaces adds only missing marketplace" {
+  FAKE_BIN="$(mktemp -d)"
+  _make_fake_claude_marketplace "superpowers-marketplace"
+  PATH="$FAKE_BIN:$PATH"
+  run _claude_add_marketplaces
+  assert_success
+  run grep "caveman" "$FAKE_BIN/marketplace_calls.log"
+  assert_success
+  run grep "superpowers-marketplace" "$FAKE_BIN/marketplace_calls.log"
+  assert_failure
+  rm -rf "$FAKE_BIN"
+}
