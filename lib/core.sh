@@ -9,19 +9,28 @@ set -Eeuo pipefail
 : "${CORE_LOG_FILE:=${HOME}/.dev-env-installer.log}"
 : "${DRY_RUN:=false}"
 
-# Ensure log file exists.
+# Ensure log file exists. Sets _CORE_LOG_READY=1 on success, =stderr_only on failure.
+# Idempotent — only does work the first time.
 _core_init_log() {
+  [[ -n "${_CORE_LOG_READY:-}" ]] && return 0
   local dir
   dir="$(dirname "${CORE_LOG_FILE}")"
-  [[ -d "$dir" ]] || mkdir -p "$dir"
-  [[ -f "$CORE_LOG_FILE" ]] || : > "$CORE_LOG_FILE"
+  if mkdir -p "$dir" 2>/dev/null && { [[ -f "$CORE_LOG_FILE" ]] || : > "$CORE_LOG_FILE" 2>/dev/null; }; then
+    _CORE_LOG_READY=1
+  else
+    _CORE_LOG_READY=stderr_only
+  fi
 }
 
 _core_emit() {
   local prefix="$1"; shift
   local msg="$*"
   _core_init_log
-  printf '%s %s\n' "$prefix" "$msg" | tee -a "$CORE_LOG_FILE"
+  if [[ "$_CORE_LOG_READY" == "1" ]]; then
+    printf '%s %s\n' "$prefix" "$msg" | tee -a "$CORE_LOG_FILE"
+  else
+    printf '%s %s\n' "$prefix" "$msg"
+  fi
 }
 
 log()     { _core_emit "🔹" "$*"; }
