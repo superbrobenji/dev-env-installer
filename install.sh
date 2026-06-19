@@ -80,6 +80,7 @@ TOOL_ORDER=(
   ripgrep
   nvm
   node
+  claude
   tree_sitter_cli
   go
   rust
