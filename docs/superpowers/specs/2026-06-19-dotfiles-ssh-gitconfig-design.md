@@ -61,7 +61,17 @@ Run after `checkout_dotfiles` as a safety net — `cp -a` preserves source perms
 ```bash
 setup_gitconfig_overrides() {
   if [[ ! -f "$HOME/.gitconfig-personal" ]]; then
-    cp "$DOTFILES_DIR/.gitconfig-personal.template" "$HOME/.gitconfig-personal"
+    local personal_email=""
+    if [[ "${YES:-0}" != "1" ]]; then
+      printf "Personal email for git commits: "
+      read -r personal_email
+    fi
+    local content
+    content="$(cat "$DOTFILES_DIR/.gitconfig-personal.template")"
+    if [[ -n "$personal_email" ]]; then
+      content="${content//\[PERSONAL EMAIL\]/$personal_email}"
+    fi
+    printf '%s\n' "$content" > "$HOME/.gitconfig-personal"
     log "Written ~/.gitconfig-personal"
   fi
 
@@ -83,9 +93,9 @@ setup_gitconfig_overrides() {
 ```
 
 Behaviour:
-- Idempotent: skips if file already exists
-- `YES=1`: copies template as-is, `[WORK EMAIL]` placeholder remains
-- Interactive: prompts once, substitutes, writes
+- Idempotent: skips each file independently if it already exists
+- `YES=1`: copies templates as-is, placeholders remain
+- Interactive: prompts for personal email then work email, substitutes both
 
 ### 5. `ensure_zshrc_local_stub` (split from `ensure_local_override_stubs`)
 
@@ -143,7 +153,7 @@ run_dotfiles() {
 |----------|-------|
 | `_is_local_override` | `.gitconfig-work` → 0; `.gitconfig-personal` → 0; `.ssh/id_rsa` → 0; `.ssh/known_hosts` → 0; `.zshrc` → 1 |
 | `ensure_zshrc_local_stub` | Creates `.zshrc.local` if missing; does not overwrite existing |
-| `setup_gitconfig_overrides` | Both files written from templates on clean HOME; `YES=1` leaves `[WORK EMAIL]` placeholder; interactive (stdin) substitutes email; idempotent on second run |
+| `setup_gitconfig_overrides` | Both files written from templates on clean HOME; `YES=1` leaves `[PERSONAL EMAIL]` and `[WORK EMAIL]` placeholders; interactive (stdin) substitutes both emails; idempotent on second run |
 | `setup_ssh_dir` | Creates `~/.ssh` with perms `700`; no error if dir exists |
 | `fix_ssh_permissions` | Sets `600` on `~/.ssh/config` if present; no error if absent |
 
@@ -155,4 +165,4 @@ run_dotfiles() {
 - `known_hosts` management
 - SSH agent setup
 - nvim config
-- Dotfiles repo content (`.ssh/config`, `.gitconfig-*.template` already committed to `~/.dotfiles`)
+- Dotfiles repo content (`.ssh/config`, `.gitconfig-*.template` already committed to `~/.dotfiles`; `.gitconfig-personal.template` updated to use `[PERSONAL EMAIL]` placeholder)
